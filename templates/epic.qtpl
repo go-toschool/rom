@@ -1,0 +1,41 @@
+Template of state
+{% func Epic() %}
+
+import {of, empty, from} from 'rxjs'
+import {mergeMap, catchError, map} from 'rxjs/operators'
+import {combineEpics, ofType} from 'redux-observable'
+
+// --begin-epic-dependencies--
+import {
+  LOGIN,
+  loginSuccess,
+  loginFailure,
+} from './login.state'
+// --end-epic-dependencies--
+
+// --begin-epic-async--
+const loginEpic = (action$, state$) => {
+	return action$.pipe(
+		ofType(LOGIN),
+		mergeMap(action => {
+      const { /*params*/ } = action
+    
+      return from(...)
+        .pipe(
+          map((response) => loginSuccess(response)),
+          catchError((error) => of(
+            loginFailure(error.message)
+          )),
+        )
+    }
+  )
+}
+// --end-epic-async--
+
+// --begin-epic-combine--
+export default combineEpics(
+  loginEpic,
+)
+// --end-epic-combine--
+
+{% endfunc %}
