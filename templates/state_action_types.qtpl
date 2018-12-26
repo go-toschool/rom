@@ -1,0 +1,4 @@
+{% import "github.com/iancoleman/strcase" %}{% func StateActionTypes(actions []string) %}{% for _, action := range actions %}{%code upper := strcase.ToScreamingSnake(action) %}
+export const {%s upper %} = '{%s upper %}'
+export const {%s upper %}_SUCCESS = '{%s upper %}_SUCCESS'
+export const {%s upper %}_FAILURE = '{%s upper %}_FAILURE'{% endfor %}{% endfunc %}

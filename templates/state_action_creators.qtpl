@@ -1,0 +1,15 @@
+{% import "github.com/iancoleman/strcase" %}{% func StateActionCreators(actions []string) %}{% for _, action := range actions %}{%code upper := strcase.ToScreamingSnake(action) %}{%code cammel := strcase.ToLowerCamel(action) %}
+export const {%s cammel %} = (data) => ({
+  type: {%s upper %},
+  payload: {data}
+})
+
+export const {%s cammel %}Success = (response) => ({
+  type: {%s upper %}_SUCCESS,
+  payload: {response}
+})
+
+export const {%s cammel %}Failure = (error) => ({
+  type: {%s upper %}_FAILURE,
+  payload: {error}
+}){% endfor %}{% endfunc %}

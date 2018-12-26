@@ -10,6 +10,10 @@ run r: build
 	@echo "[run] Running..."
 	@$(BIN)
 
+install r: build
+	@echo "[instal] Installing..."
+	@$(GO) install
+
 clean:
 	@echo "[clean] Removing $(BIN)..."
 	@rm -rf templates/*.qtpl.go

@@ -1,0 +1,5 @@
+{% import "github.com/iancoleman/strcase" %}{% func StateInitialState(actions []string) %}{% for _, action := range actions %}{%code cammel := strcase.ToLowerCamel(action) %}  {%s cammel %}Fetching: false,
+  {%s cammel %}Fetched: false,
+  {%s cammel %}Error: null,
+  {%s cammel %}Data: null,
+  {%s cammel %}Response: null,{% endfor %}{% endfunc %}

@@ -1,0 +1,18 @@
+{% func StateBase() %}import {Map} from 'immutable'
+
+// --end-actions-types--
+
+// --end-actions-creators--
+
+const INITIAL_STATE = Map({
+  // --end-initial-state--
+})
+
+export default function reducer (state = INITIAL_STATE, {type, payload}) {
+  switch (type) {
+    // --end-reducers--
+    
+    default:
+      return state
+  }
+}{% endfunc %}

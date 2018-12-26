@@ -1,45 +1,152 @@
-// Copyright © 2018 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
-	"fmt"
+	"bufio"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/go-toschool/rom/templates"
 	"github.com/spf13/cobra"
 )
 
-func createModule(module string, actions []string) error {
-	t := templates.State(module, actions)
+func insert(s []string, at int, val string) []string {
+	// Make sure there is enough room
+	s = append(s, "")
+	// Move all elements of s up one slot
+	copy(s[at+1:], s[at:])
+	// Insert the new element at the now free position
+	s[at] = val
+	return s
+}
 
+func createModule(module string, actions []string) error {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 
-	fmt.Print("::::::::")
-	fmt.Println(pwd + "/" + module + ".state.js")
-	if err := ioutil.WriteFile(pwd+"/"+module+".state.js", []byte(t), 0777); err != nil {
+	// check folder
+	folderPath := pwd + "/" + module
+	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
+		err = os.MkdirAll(folderPath, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	/* STATE file */
+	path := folderPath + "/" + module + ".state.js"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t := templates.StateBase()
+		err = ioutil.WriteFile(path, []byte(t), 0777)
+		if err != nil {
+			return err
+		}
+	}
+
+	// read file
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// scanner on file
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	i := 0
+	for scanner.Scan() {
+		var template string
+		if strings.Contains(scanner.Text(), "// --end-actions-types--") {
+			template = templates.StateActionTypes(actions)
+		} else if strings.Contains(scanner.Text(), "// --end-actions-creators--") {
+			template = templates.StateActionCreators(actions)
+		} else if strings.Contains(scanner.Text(), "// --end-initial-state--") {
+			template = templates.StateInitialState(actions)
+		} else if strings.Contains(scanner.Text(), "// --end-reducers--") {
+			template = templates.StateEndReducers(actions)
+		}
+
+		templateLines := strings.Split(template, "\n")
+		for _, value := range templateLines {
+			lines = insert(lines, i, value)
+			i++
+		}
+
+		lines = append(lines, scanner.Text())
+		i++
+	}
+	if scanner.Err() != nil {
 		return err
 	}
 
+	// write file
+	out := strings.Join(lines, "\n")
+	err = ioutil.WriteFile(path, []byte(out), 0777)
+	if err != nil {
+		return err
+	}
+
+	/* EPIC file */
+	path = folderPath + "/" + module + ".epic.js"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		t := templates.StateBase()
+		err = ioutil.WriteFile(path, []byte(t), 0777)
+		if err != nil {
+			return err
+		}
+	}
+
+	// read file
+	file, err = os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// scanner on file
+	// var lines []string
+	scanner = bufio.NewScanner(file)
+	i = 0
+	for scanner.Scan() {
+		var template string
+		template = templates.Epic()
+		// if strings.Contains(scanner.Text(), "// --end-actions-types--") {
+		// } else if strings.Contains(scanner.Text(), "// --end-actions-creators--") {
+		// 	template = templates.StateActionCreators(actions)
+		// } else if strings.Contains(scanner.Text(), "// --end-initial-state--") {
+		// 	template = templates.StateInitialState(actions)
+		// } else if strings.Contains(scanner.Text(), "// --end-reducers--") {
+		// 	template = templates.StateEndReducers(actions)
+		// }
+
+		templateLines := strings.Split(template, "\n")
+		for _, value := range templateLines {
+			lines = insert(lines, i, value)
+			i++
+		}
+
+		lines = append(lines, scanner.Text())
+		i++
+	}
+	if scanner.Err() != nil {
+		return err
+	}
+
+	// write file
+	out = strings.Join(lines, "\n")
+	err = ioutil.WriteFile(path, []byte(out), 0777)
+	if err != nil {
+		return err
+	}
+
+	//TODO(ca): implements container file
+	//TODO(ca): implements component file
 	return nil
 }
 
+//TODO(mt): change implementation, rom create --module <module_name> <action_1>,<action_2>,…,<action_n>
 func parseCreateFlag(opt []string) (string, []string) {
 	moduleName := opt[0]
 	moduleExtensions := opt[1:len(opt)]
@@ -47,21 +154,14 @@ func parseCreateFlag(opt []string) (string, []string) {
 	return moduleName, moduleExtensions
 }
 
-func handleCreateCmd(opt []string) {
-	mName, mOpt := parseCreateFlag(opt)
-	createModule(mName, mOpt)
-	fmt.Println("------")
-}
-
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create",
-	Short: "sdfsfsdfsfdsfdsfsf",
+	Use:   "create --module",
+	Short: "example: rom create --module <module_name>,<action_1>,<action_2>,…,<action_n>",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("oli")
 		moduleOption, _ := cmd.Flags().GetStringSlice("module")
-		handleCreateCmd(moduleOption)
-		fmt.Println("piroca")
+		mName, mOpt := parseCreateFlag(moduleOption)
+		createModule(mName, mOpt)
 	},
 }
 

@@ -1,0 +1,22 @@
+{% import "github.com/iancoleman/strcase" %}{% func StateEndReducers(actions []string) %}{% for _, action := range actions %}{%code upper := strcase.ToScreamingSnake(action) %}{%code cammel := strcase.ToLowerCamel(action) %}case {%s upper %}: {
+  const {data} = payload
+  return state
+    .set({%s cammel %}Data, data)
+    .set({%s cammel %}Fetching, true)
+}
+
+case {%s upper %}_SUCCESS: {
+  const {response} = payload
+  return state
+    .set({%s cammel %}Response, response)
+    .set({%s cammel %}Fetching, false)
+    .set({%s cammel %}Fetched, true)
+}
+
+case {%s upper %}_FAILURE: {
+  const {error} = payload
+  return state
+    .set({%s cammel %}Error, error)
+    .set({%s cammel %}Fetching, false)
+    .set({%s cammel %}Fetched, true)
+}{% endfor %}{% endfunc %}
